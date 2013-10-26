@@ -17,7 +17,6 @@ import java.io.File;
 import org.artofsolving.jodconverter.process.ProcessManager;
 import org.artofsolving.jodconverter.process.PureJavaProcessManager;
 import org.artofsolving.jodconverter.process.LinuxProcessManager;
-import org.artofsolving.jodconverter.process.SigarProcessManager;
 import org.artofsolving.jodconverter.util.PlatformUtils;
 
 public class DefaultOfficeManagerConfiguration {
@@ -126,9 +125,8 @@ public class DefaultOfficeManagerConfiguration {
     /**
      * Provide a specific {@link ProcessManager} implementation
      * <p>
-     * The default is to use {@link SigarProcessManager} if sigar.jar is
-     * available in the classpath, otherwise {@link LinuxProcessManager}
-     * on Linux and {@link PureJavaProcessManager} on other platforms.
+     * Use {@link LinuxProcessManager} on Linux
+     * and {@link PureJavaProcessManager} on other platforms.
      * 
      * @param processManager
      * @return
@@ -180,9 +178,7 @@ public class DefaultOfficeManagerConfiguration {
     }
 
     private ProcessManager findBestProcessManager() {
-        if (isSigarAvailable()) {
-            return new SigarProcessManager();
-        } else if (PlatformUtils.isLinux()) {
+        if (PlatformUtils.isLinux()) {
         	LinuxProcessManager processManager = new LinuxProcessManager();
         	if (runAsArgs != null) {
         		processManager.setRunAsArgs(runAsArgs);
@@ -192,15 +188,6 @@ public class DefaultOfficeManagerConfiguration {
             // NOTE: UnixProcessManager can't be trusted to work on Solaris
             // because of the 80-char limit on ps output there  
             return new PureJavaProcessManager();
-        }
-    }
-
-    private boolean isSigarAvailable() {
-        try {
-            Class.forName("org.hyperic.sigar.Sigar", false, getClass().getClassLoader());
-            return true;
-        } catch (ClassNotFoundException classNotFoundException) {
-            return false;
         }
     }
 

@@ -17,6 +17,9 @@ import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import java.util.logging.Logger;
+import java.util.logging.Level;
+
 import org.apache.commons.io.IOUtils;
 
 /**
@@ -28,6 +31,7 @@ import org.apache.commons.io.IOUtils;
  * {@link #findPid(String)}.
  */
 public class LinuxProcessManager implements ProcessManager {
+    private static final Logger logger = Logger.getLogger(LinuxProcessManager.class.getName());
 
     private static final Pattern PS_OUTPUT_LINE = Pattern.compile("^\\s*(\\d+)\\s+(.*)$"); 
 
@@ -50,6 +54,7 @@ public class LinuxProcessManager implements ProcessManager {
                 String command = lineMatcher.group(2);
                 Matcher commandMatcher = commandPattern.matcher(command);
                 if (commandMatcher.find()) {
+                    logger.info("pid: " + lineMatcher.group(1));
                     return Long.parseLong(lineMatcher.group(1));
                 }
             }
@@ -61,6 +66,7 @@ public class LinuxProcessManager implements ProcessManager {
     	if (pid <= 0) {
     		throw new IllegalArgumentException("invalid pid: " + pid);
     	}
+        logger.info("kill pid: " + pid);
         execute("/bin/kill", "-KILL", Long.toString(pid));
     }
 
