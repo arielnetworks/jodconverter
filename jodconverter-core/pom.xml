@@ -4,7 +4,7 @@
 
   <groupId>org.artofsolving.jodconverter</groupId>
   <artifactId>jodconverter-core</artifactId>
-  <version>3.0-beta-6-ariel-SNAPSHOT</version>
+  <version>3.0-beta-6-ariel</version>
   <packaging>jar</packaging>
 
   <name>JODConverter - Core Library</name>
@@ -25,7 +25,7 @@
   <scm>
     <url>git@github.com:arielnetworks/jodconverter.git</url>
     <connection>scm:git:git@github.com:arielnetworks/jodconverter.git</connection>
-    <tag>HEAD</tag>
+    <tag>3.0-beta-6-ariel</tag>
   </scm>
   <inceptionYear>2003</inceptionYear>
   <developers>
