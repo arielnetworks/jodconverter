@@ -3,10 +3,11 @@
   <groupId>org.artofsolving.jodconverter</groupId>
   <artifactId>jodconverter-core</artifactId>
   <versioning>
-    <release>3.0-beta-5-ariel</release>
+    <release>3.0-beta-6-ariel</release>
     <versions>
       <version>3.0-beta-5-ariel</version>
+      <version>3.0-beta-6-ariel</version>
     </versions>
-    <lastUpdated>20131026140752</lastUpdated>
+    <lastUpdated>20140609122248</lastUpdated>
   </versioning>
 </metadata>
