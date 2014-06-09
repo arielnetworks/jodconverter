@@ -18,6 +18,8 @@ import static org.testng.Assert.assertTrue;
 import java.io.File;
 import java.io.FilenameFilter;
 import java.io.IOException;
+import java.util.Collections;
+import java.util.HashSet;
 import java.util.Set;
 
 import org.apache.commons.io.FilenameUtils;
@@ -59,8 +61,7 @@ public class OfficeDocumentConverterFunctionalTest {
                         assertTrue(outputFile.isFile() && outputFile.length() > 0);
                         //TODO use file detection to make sure outputFile is in the expected format
                     } catch (OfficeException e) {
-                        if (inputExtension.equals("odg") && outputFormat.getExtension().equals("svg")) {
-                            // svg convertion failed in some environments. see https://bugs.freedesktop.org/show_bug.cgi?id=63324
+                        if (isIgnoreableFormat(inputFormat, outputFormat)) {
                             System.out.printf("failed (but ignored).\n");
                         } else {
                             throw e;
@@ -73,4 +74,20 @@ public class OfficeDocumentConverterFunctionalTest {
         }
     }
 
+    private boolean isIgnoreableFormat(DocumentFormat inputFormat, DocumentFormat outputFormat) {
+        // svg convertion failed in some environments. see https://bugs.freedesktop.org/show_bug.cgi?id=63324
+        if (inputFormat.getExtension().equals("odg") && outputFormat.getExtension().equals("svg")) {
+            return true;
+        }
+
+        // In LibreOffice 4.2.4, Saving to old and proprietary OOo/StarOffice fileformats has been removed.
+        // see. https://bugs.freedesktop.org/show_bug.cgi?id=74979
+        Set<String> oldOooFormats = new HashSet<String>();
+        Collections.addAll(oldOooFormats, "sxc", "sxw", "sxi");
+        if (oldOooFormats.contains(outputFormat.getExtension())) {
+            return true;
+        }
+
+        return false;
+    }
 }
