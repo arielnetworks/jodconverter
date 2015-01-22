@@ -14,14 +14,18 @@ package org.artofsolving.jodconverter.office;
 
 import static org.artofsolving.jodconverter.process.ProcessManager.PID_NOT_FOUND;
 import static org.artofsolving.jodconverter.process.ProcessManager.PID_UNKNOWN;
+
 import java.io.File;
 import java.io.IOException;
+import java.io.OutputStream;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import org.apache.commons.exec.PumpStreamHandler;
 import org.apache.commons.io.FileUtils;
 import org.artofsolving.jodconverter.process.ProcessManager;
 import org.artofsolving.jodconverter.process.ProcessQuery;
@@ -35,19 +39,24 @@ class OfficeProcess {
     private final File templateProfileDir;
     private final File instanceProfileDir;
     private final ProcessManager processManager;
+    private final OutputStream stdout;
+    private final OutputStream stderr;
 
     private Process process;
+    private PumpStreamHandler streamPumper;
     private long pid = PID_UNKNOWN;
 
     private final Logger logger = Logger.getLogger(getClass().getName());
 
-    public OfficeProcess(File officeHome, UnoUrl unoUrl, String[] runAsArgs, File templateProfileDir, File workDir, ProcessManager processManager) {
+    public OfficeProcess(File officeHome, UnoUrl unoUrl, String[] runAsArgs, File templateProfileDir, File workDir, ProcessManager processManager, OutputStream stdout, OutputStream stderr) {
         this.officeHome = officeHome;
         this.unoUrl = unoUrl;
         this.runAsArgs = runAsArgs;
         this.templateProfileDir = templateProfileDir;
         this.instanceProfileDir = getInstanceProfileDir(workDir, unoUrl);
         this.processManager = processManager;
+        this.stdout = stdout;
+        this.stderr = stderr;
     }
 
     public void start() throws IOException {
@@ -85,12 +94,19 @@ class OfficeProcess {
         }
         logger.info(String.format("starting process with acceptString '%s' and profileDir '%s'", unoUrl, instanceProfileDir));
         process = processBuilder.start();
-        pid = processManager.findPid(processQuery);
-        if (pid == PID_NOT_FOUND) {
-            throw new IllegalStateException(String.format("process with acceptString '%s' started but its pid could not be found",
+        startStreamPumper();
+        try {
+            pid = processManager.findPid(processQuery);
+            if (pid == PID_NOT_FOUND) {
+                throw new IllegalStateException(String.format("process with acceptString '%s' started but its pid could not be found",
                     unoUrl.getAcceptString()));
+            }
+            logger.info("started process" + (pid != PID_UNKNOWN ? "; pid = " + pid : ""));
+        } catch (IOException|RuntimeException e) {
+            stopStreamPumper();
+            process.destroy();
+            throw e;
         }
-        logger.info("started process" + (pid != PID_UNKNOWN ? "; pid = " + pid : ""));
     }
 
     private File getInstanceProfileDir(File workDir, UnoUrl unoUrl) {
@@ -124,6 +140,26 @@ class OfficeProcess {
                     logger.severe("could not delete profileDir: " + ioException.getMessage());
                 }
             }
+        }
+    }
+
+    private void startStreamPumper() {
+        streamPumper = new PumpStreamHandler(stdout, stderr);
+        streamPumper.setProcessOutputStream(process.getInputStream());
+        streamPumper.setProcessErrorStream(process.getErrorStream());
+        streamPumper.start();
+    }
+
+    public void stopStreamPumper() {
+        if (streamPumper == null) {
+            return;
+        }
+        try {
+            streamPumper.stop();
+        } catch (IOException e) {
+            logger.log(Level.WARNING, "can't stop streamPumper", e);
+        } finally {
+            streamPumper = null;
         }
     }
 
@@ -202,8 +238,11 @@ class OfficeProcess {
 
     public int forciblyTerminate(long retryInterval, long retryTimeout) throws IOException, RetryTimeoutException {
         logger.info(String.format("trying to forcibly terminate process: '" + unoUrl + "'" + (pid != PID_UNKNOWN ? " (pid " + pid  + ")" : "")));
-        processManager.kill(process, pid);
-        return getExitCode(retryInterval, retryTimeout);
+        try {
+            processManager.kill(process, pid);
+            return getExitCode(retryInterval, retryTimeout);
+        } finally {
+            stopStreamPumper();
+        }
     }
-
 }

@@ -38,7 +38,7 @@ class ManagedOfficeProcess {
 	public ManagedOfficeProcess(ManagedOfficeProcessSettings settings) throws OfficeException {
 		this.settings = settings;
 		process = new OfficeProcess(settings.getOfficeHome(), settings.getUnoUrl(), settings.getRunAsArgs(), settings.getTemplateProfileDir(), settings.getWorkDir(), settings
-				.getProcessManager());
+				.getProcessManager(), settings.getRedirectStdout(), settings.getRedirectStderr());
 		connection = new OfficeConnection(settings.getUnoUrl());
 	}
 
@@ -139,15 +139,19 @@ class ManagedOfficeProcess {
 
 	private void doStopProcess() {
 		try {
-			XDesktop desktop = OfficeUtils.cast(XDesktop.class, connection.getService(OfficeUtils.SERVICE_DESKTOP));
-			desktop.terminate();
-		} catch (DisposedException disposedException) {
-			// expected
-		} catch (Exception exception) {
-			// in case we can't get hold of the desktop
-			doTerminateProcess();
+			try {
+				XDesktop desktop = OfficeUtils.cast(XDesktop.class, connection.getService(OfficeUtils.SERVICE_DESKTOP));
+				desktop.terminate();
+			} catch (DisposedException disposedException) {
+				// expected
+			} catch (Exception exception) {
+				// in case we can't get hold of the desktop
+				doTerminateProcess();
+			}
+			doEnsureProcessExited();
+		} finally {
+			process.stopStreamPumper();
 		}
-		doEnsureProcessExited();
 	}
 
 	private void doEnsureProcessExited() throws OfficeException {

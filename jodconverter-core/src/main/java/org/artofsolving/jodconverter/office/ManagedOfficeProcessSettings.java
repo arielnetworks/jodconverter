@@ -13,6 +13,7 @@
 package org.artofsolving.jodconverter.office;
 
 import java.io.File;
+import java.io.OutputStream;
 
 import org.artofsolving.jodconverter.process.ProcessManager;
 import org.artofsolving.jodconverter.process.PureJavaProcessManager;
@@ -29,6 +30,8 @@ class ManagedOfficeProcessSettings {
     private ProcessManager processManager = new PureJavaProcessManager();
     private long retryTimeout = DefaultOfficeManagerConfiguration.DEFAULT_RETRY_TIMEOUT;
     private long retryInterval = DEFAULT_RETRY_INTERVAL;
+    private OutputStream redirectStdout;
+    private OutputStream redirectStderr;
 
     public ManagedOfficeProcessSettings(UnoUrl unoUrl) {
         this.unoUrl = unoUrl;
@@ -94,4 +97,19 @@ class ManagedOfficeProcessSettings {
         this.retryInterval = retryInterval;
     }
 
+    public void setRedirectStdout(OutputStream redirectStdout) {
+        this.redirectStdout = redirectStdout;
+    }
+
+    public OutputStream getRedirectStdout() {
+        return redirectStdout;
+    }
+
+    public void setRedirectStderr(OutputStream redirectStderr) {
+        this.redirectStderr = redirectStderr;
+    }
+
+    public OutputStream getRedirectStderr() {
+        return redirectStderr;
+    }
 }

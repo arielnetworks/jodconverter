@@ -13,6 +13,7 @@
 package org.artofsolving.jodconverter.office;
 
 import java.io.File;
+import java.io.OutputStream;
 
 import org.artofsolving.jodconverter.process.ProcessManager;
 import org.artofsolving.jodconverter.process.PureJavaProcessManager;
@@ -34,6 +35,8 @@ public class DefaultOfficeManagerConfiguration {
     private long taskExecutionTimeout = 120000L;  // 2 minutes
     private int maxTasksPerProcess = 200;
     private long retryTimeout = DEFAULT_RETRY_TIMEOUT;
+    private OutputStream redirectStdout;
+    private OutputStream redirectStderr;
 
     private ProcessManager processManager = null;  // lazily initialised
 
@@ -150,6 +153,22 @@ public class DefaultOfficeManagerConfiguration {
         return this;
     }
 
+    /**
+     * Redirect office process stdout to this stream.
+     */
+    public DefaultOfficeManagerConfiguration setRedirectStdout(OutputStream redirectStdout) {
+        this.redirectStdout = redirectStdout;
+        return this;
+    }
+
+    /**
+     * Redirect office process stderr to this stream.
+     */
+    public DefaultOfficeManagerConfiguration setRedirectStderr(OutputStream redirectStderr) {
+        this.redirectStderr = redirectStderr;
+        return this;
+    }
+
     public OfficeManager buildOfficeManager() throws IllegalStateException {
         if (officeHome == null) {
             throw new IllegalStateException("officeHome not set and could not be auto-detected");
@@ -174,7 +193,7 @@ public class DefaultOfficeManagerConfiguration {
         for (int i = 0; i < numInstances; i++) {
             unoUrls[i] = (connectionProtocol == OfficeConnectionProtocol.PIPE) ? UnoUrl.pipe(pipeNames[i]) : UnoUrl.socket(portNumbers[i]);
         }
-        return new ProcessPoolOfficeManager(officeHome, unoUrls, runAsArgs, templateProfileDir, workDir, retryTimeout, taskQueueTimeout, taskExecutionTimeout, maxTasksPerProcess, processManager);
+        return new ProcessPoolOfficeManager(officeHome, unoUrls, runAsArgs, templateProfileDir, workDir, retryTimeout, taskQueueTimeout, taskExecutionTimeout, maxTasksPerProcess, processManager, redirectStdout, redirectStderr);
     }
 
     private ProcessManager findBestProcessManager() {
