@@ -99,7 +99,7 @@
       <!-- for JSON configuration -->
       <groupId>org.json</groupId>
       <artifactId>json</artifactId>
-      <version>20090211</version>
+      <version>20141113</version>
       <optional>true</optional>
     </dependency>
 
@@ -108,7 +108,7 @@
     <dependency>
       <groupId>org.testng</groupId>
       <artifactId>testng</artifactId>
-      <version>6.8.7</version>
+      <version>6.8.17</version>
       <scope>test</scope>
     </dependency>
 
