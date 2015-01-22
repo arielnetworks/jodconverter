@@ -26,7 +26,7 @@ public class ExternalOfficeManagerTest {
     public void executeTask() throws Exception {
         UnoUrl unoUrl = UnoUrl.socket(2002);
         OfficeProcess officeProcess = new OfficeProcess(OfficeUtils.getDefaultOfficeHome(), unoUrl,
-            null, null, new File(System.getProperty("java.io.tmpdir")), new PureJavaProcessManager(), null, null);
+            null, null, new File(System.getProperty("java.io.tmpdir")), new PureJavaProcessManager(), null, null, null);
         officeProcess.start();
         Thread.sleep(2000);
         Integer exitCode = officeProcess.getExitCode();

@@ -36,13 +36,18 @@ class ManagedOfficeProcess {
 	private final Logger logger = Logger.getLogger(getClass().getName());
 
 	public ManagedOfficeProcess(ManagedOfficeProcessSettings settings) throws OfficeException {
-		this.settings = settings;
-		process = new OfficeProcess(settings.getOfficeHome(), settings.getUnoUrl(), settings.getRunAsArgs(), settings.getTemplateProfileDir(), settings.getWorkDir(), settings
-				.getProcessManager(), settings.getRedirectStdout(), settings.getRedirectStderr());
-		connection = new OfficeConnection(settings.getUnoUrl());
+	    this(settings, null);
 	}
 
-	public OfficeConnection getConnection() {
+	// for unit test
+    ManagedOfficeProcess(ManagedOfficeProcessSettings settings, String[] overrideArgs) throws OfficeException {
+        this.settings = settings;
+        process = new OfficeProcess(settings.getOfficeHome(), settings.getUnoUrl(), settings.getRunAsArgs(), settings.getTemplateProfileDir(), settings.getWorkDir(), settings
+                .getProcessManager(), settings.getRedirectStdout(), settings.getRedirectStderr(), overrideArgs);
+        connection = new OfficeConnection(settings.getUnoUrl());
+    }
+
+    public OfficeConnection getConnection() {
 		return connection;
 	}
 

@@ -15,7 +15,8 @@ package org.artofsolving.jodconverter.office;
 import static org.testng.Assert.assertEquals;
 
 import java.io.ByteArrayOutputStream;
-import java.io.UnsupportedEncodingException;
+import java.io.InputStream;
+import java.io.IOException;
 import java.nio.charset.Charset;
 
 import org.testng.annotations.Test;
@@ -23,16 +24,50 @@ import org.testng.annotations.Test;
 @Test(groups="functional")
 public class OfficeProcessOutputTest {
 
-    public void dontShowWarnings() throws UnsupportedEncodingException {
-        ByteArrayOutputStream buf = new ByteArrayOutputStream();
+    public void dontShowWarnings() throws IOException {
+        ByteArrayOutputStream stdout = new ByteArrayOutputStream();
+        ByteArrayOutputStream stderr = new ByteArrayOutputStream();
         ManagedOfficeProcessSettings settings = new ManagedOfficeProcessSettings(UnoUrl.socket(2022));
-        settings.setRedirectStderr(buf);
+        settings.setRedirectStdout(stdout);
+        settings.setRedirectStderr(stderr);
         ManagedOfficeProcess proc = new ManagedOfficeProcess(settings);
         try {
             proc.startAndWait();
         } finally {
             proc.stopAndWait();
         }
-        assertEquals(buf.toString(Charset.defaultCharset().name()), "");
+        assertEquals(stdout.toByteArray(), new byte[0]);
+        assertEquals(stderr.toByteArray(), new byte[0]);
+    }
+
+    public void checkVersion() throws IOException, InterruptedException {
+        ByteArrayOutputStream stdout = new ByteArrayOutputStream();
+        ByteArrayOutputStream stderr = new ByteArrayOutputStream();
+        ManagedOfficeProcessSettings settings = new ManagedOfficeProcessSettings(UnoUrl.socket(2022));
+        settings.setRedirectStdout(stdout);
+        settings.setRedirectStderr(stderr);
+        ManagedOfficeProcess proc = new ManagedOfficeProcess(settings, new String[]{"--version", "--headless"});
+        try {
+            proc.startAndWait();
+        } catch (OfficeException e) {
+            // ignore
+        } finally {
+            proc.stopAndWait();
+        }
+
+        String executable = OfficeUtils.getOfficeExecutable(OfficeUtils.getDefaultOfficeHome()).getAbsolutePath();
+        Process expected = new ProcessBuilder(executable, "--version", "--headless").start();
+        expected.waitFor();
+
+        assertEquals(stdout.toByteArray(), readFully(expected.getInputStream()));
+        assertEquals(stderr.toByteArray(), readFully(expected.getErrorStream()));
+    }
+
+    private static byte[] readFully(InputStream in) throws IOException {
+        ByteArrayOutputStream bytes = new ByteArrayOutputStream();
+        for (int n = in.read(); n >= 0; n = in.read()) {
+            bytes.write(n);
+        }
+        return bytes.toByteArray();
     }
 }

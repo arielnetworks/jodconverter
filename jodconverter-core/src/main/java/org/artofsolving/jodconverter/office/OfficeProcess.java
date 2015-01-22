@@ -41,6 +41,7 @@ class OfficeProcess {
     private final ProcessManager processManager;
     private final OutputStream stdout;
     private final OutputStream stderr;
+    private final String[] overrideArgs;
 
     private Process process;
     private PumpStreamHandler streamPumper;
@@ -48,7 +49,7 @@ class OfficeProcess {
 
     private final Logger logger = Logger.getLogger(getClass().getName());
 
-    public OfficeProcess(File officeHome, UnoUrl unoUrl, String[] runAsArgs, File templateProfileDir, File workDir, ProcessManager processManager, OutputStream stdout, OutputStream stderr) {
+    public OfficeProcess(File officeHome, UnoUrl unoUrl, String[] runAsArgs, File templateProfileDir, File workDir, ProcessManager processManager, OutputStream stdout, OutputStream stderr, String[] overrideArgs) {
         this.officeHome = officeHome;
         this.unoUrl = unoUrl;
         this.runAsArgs = runAsArgs;
@@ -57,6 +58,7 @@ class OfficeProcess {
         this.processManager = processManager;
         this.stdout = stdout;
         this.stderr = stderr;
+        this.overrideArgs = overrideArgs;
     }
 
     public void start() throws IOException {
@@ -79,15 +81,19 @@ class OfficeProcess {
         	command.addAll(Arrays.asList(runAsArgs));
         }
         command.add(executable.getAbsolutePath());
-        command.add("--accept=" + unoUrl.getAcceptString() + ";urp;");
-        command.add("-env:UserInstallation=" + OfficeUtils.toUrl(instanceProfileDir));
-        command.add("--headless");
-        command.add("--nocrashreport");
-        command.add("--nodefault");
-        command.add("--nofirststartwizard");
-        command.add("--nolockcheck");
-        command.add("--nologo");
-        command.add("--norestore");
+        if (overrideArgs != null) {
+            command.addAll(Arrays.asList(overrideArgs));
+        } else {
+            command.add("--accept=" + unoUrl.getAcceptString() + ";urp;");
+            command.add("-env:UserInstallation=" + OfficeUtils.toUrl(instanceProfileDir));
+            command.add("--headless");
+            command.add("--nocrashreport");
+            command.add("--nodefault");
+            command.add("--nofirststartwizard");
+            command.add("--nolockcheck");
+            command.add("--nologo");
+            command.add("--norestore");
+        }
         ProcessBuilder processBuilder = new ProcessBuilder(command);
         if (PlatformUtils.isWindows()) {
             addBasisAndUrePaths(processBuilder);
