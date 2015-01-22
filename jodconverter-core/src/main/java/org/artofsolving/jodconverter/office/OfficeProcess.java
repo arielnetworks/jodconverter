@@ -41,6 +41,7 @@ class OfficeProcess {
     private final ProcessManager processManager;
     private final OutputStream stdout;
     private final OutputStream stderr;
+    private final boolean killExistingProcess;
     private final String[] overrideArgs;
 
     private Process process;
@@ -49,7 +50,7 @@ class OfficeProcess {
 
     private final Logger logger = Logger.getLogger(getClass().getName());
 
-    public OfficeProcess(File officeHome, UnoUrl unoUrl, String[] runAsArgs, File templateProfileDir, File workDir, ProcessManager processManager, OutputStream stdout, OutputStream stderr, String[] overrideArgs) {
+    public OfficeProcess(File officeHome, UnoUrl unoUrl, String[] runAsArgs, File templateProfileDir, File workDir, ProcessManager processManager, OutputStream stdout, OutputStream stderr, boolean killExistingProcess, String[] overrideArgs) {
         this.officeHome = officeHome;
         this.unoUrl = unoUrl;
         this.runAsArgs = runAsArgs;
@@ -58,6 +59,7 @@ class OfficeProcess {
         this.processManager = processManager;
         this.stdout = stdout;
         this.stderr = stderr;
+        this.killExistingProcess = killExistingProcess;
         this.overrideArgs = overrideArgs;
     }
 
@@ -65,13 +67,27 @@ class OfficeProcess {
         start(false);
     }
 
+    private void checkExistingProcess(ProcessQuery processQuery) throws IOException {
+        long existingPid = processManager.findPid(processQuery);
+    	if (!(existingPid == PID_NOT_FOUND || existingPid == PID_UNKNOWN) && killExistingProcess) {
+            logger.warning(String.format("a process with acceptString '%s' is already running; pid %d", unoUrl.getAcceptString(), existingPid));
+            processManager.kill(null, existingPid);
+            try {
+                Thread.sleep(1000);
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+            }
+            existingPid = processManager.findPid(processQuery);
+        }
+        if (!(existingPid == PID_NOT_FOUND || existingPid == PID_UNKNOWN)) {
+            throw new IllegalStateException(
+                    String.format("a process with acceptString '%s' is already running; pid %d", unoUrl.getAcceptString(), existingPid));
+        }
+    }
+
     public void start(boolean restart) throws IOException {
         ProcessQuery processQuery = new ProcessQuery("soffice.bin", unoUrl.getAcceptString());
-        long existingPid = processManager.findPid(processQuery);
-    	if (!(existingPid == PID_NOT_FOUND || existingPid == PID_UNKNOWN)) {
-			throw new IllegalStateException(String.format("a process with acceptString '%s' is already running; pid %d",
-			        unoUrl.getAcceptString(), existingPid));
-        }
+        checkExistingProcess(processQuery);
     	if (!restart) {
     	    prepareInstanceProfileDir();
     	}

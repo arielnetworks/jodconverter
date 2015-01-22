@@ -32,6 +32,7 @@ class ManagedOfficeProcessSettings {
     private long retryInterval = DEFAULT_RETRY_INTERVAL;
     private OutputStream redirectStdout;
     private OutputStream redirectStderr;
+    private boolean killExistingProcess;
 
     public ManagedOfficeProcessSettings(UnoUrl unoUrl) {
         this.unoUrl = unoUrl;
@@ -111,5 +112,13 @@ class ManagedOfficeProcessSettings {
 
     public OutputStream getRedirectStderr() {
         return redirectStderr;
+    }
+
+    public void setKillExistingProcess(boolean killExistingProcess) {
+        this.killExistingProcess = killExistingProcess;
+    }
+
+    public boolean isKillExistingProcess() {
+        return killExistingProcess;
     }
 }

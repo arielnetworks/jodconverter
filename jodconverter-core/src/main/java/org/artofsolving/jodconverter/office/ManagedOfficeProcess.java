@@ -42,8 +42,9 @@ class ManagedOfficeProcess {
 	// for unit test
     ManagedOfficeProcess(ManagedOfficeProcessSettings settings, String[] overrideArgs) throws OfficeException {
         this.settings = settings;
-        process = new OfficeProcess(settings.getOfficeHome(), settings.getUnoUrl(), settings.getRunAsArgs(), settings.getTemplateProfileDir(), settings.getWorkDir(), settings
-                .getProcessManager(), settings.getRedirectStdout(), settings.getRedirectStderr(), overrideArgs);
+        process = new OfficeProcess(
+                settings.getOfficeHome(), settings.getUnoUrl(), settings.getRunAsArgs(), settings.getTemplateProfileDir(), settings.getWorkDir(),
+                settings.getProcessManager(), settings.getRedirectStdout(), settings.getRedirectStderr(), settings.isKillExistingProcess(), overrideArgs);
         connection = new OfficeConnection(settings.getUnoUrl());
     }
 
