@@ -39,14 +39,19 @@ public class PooledOfficeManagerTest {
     private static final long RESTART_WAIT_TIME = 2 * 1000;
 
     public void executeTask() throws Exception {
-        PooledOfficeManager officeManager = new PooledOfficeManager(CONNECTION_MODE);
+        PooledOfficeManagerSettings configuration = new PooledOfficeManagerSettings(CONNECTION_MODE);
+        configuration.setRedirectStdout(System.out);
+        configuration.setRedirectStderr(System.err);
+        PooledOfficeManager officeManager = new PooledOfficeManager(configuration);
         ManagedOfficeProcess managedOfficeProcess = (ManagedOfficeProcess) ReflectionUtils.getPrivateField(officeManager, "managedOfficeProcess");
         OfficeProcess process = (OfficeProcess) ReflectionUtils.getPrivateField(managedOfficeProcess, "process");
         OfficeConnection connection = (OfficeConnection) ReflectionUtils.getPrivateField(managedOfficeProcess, "connection");
         
+        assertEquals(countPumperThreads(), 0);
         officeManager.start();
         assertTrue(process.isRunning());
         assertTrue(connection.isConnected());
+        assertEquals(countPumperThreads(), 2);
         
         MockOfficeTask task = new MockOfficeTask();
         officeManager.execute(task);
@@ -56,18 +61,24 @@ public class PooledOfficeManagerTest {
         assertFalse(connection.isConnected());
         assertFalse(process.isRunning());
         assertEquals(process.getExitCode(0, 0), 0);
+        assertEquals(countPumperThreads(), 0);
     }
 
     public void restartAfterCrash() throws Exception {
-        final PooledOfficeManager officeManager = new PooledOfficeManager(CONNECTION_MODE);
+        PooledOfficeManagerSettings configuration = new PooledOfficeManagerSettings(CONNECTION_MODE);
+        configuration.setRedirectStdout(System.out);
+        configuration.setRedirectStderr(System.err);
+        final PooledOfficeManager officeManager = new PooledOfficeManager(configuration);
         ManagedOfficeProcess managedOfficeProcess = (ManagedOfficeProcess) ReflectionUtils.getPrivateField(officeManager, "managedOfficeProcess");
         OfficeProcess process = (OfficeProcess) ReflectionUtils.getPrivateField(managedOfficeProcess, "process");
         OfficeConnection connection = (OfficeConnection) ReflectionUtils.getPrivateField(managedOfficeProcess, "connection");
         assertNotNull(connection);
         
+        assertEquals(countPumperThreads(), 0);
         officeManager.start();
         assertTrue(process.isRunning());
         assertTrue(connection.isConnected());
+        assertEquals(countPumperThreads(), 2);
         
         new Thread() {
             public void run() {
@@ -89,6 +100,7 @@ public class PooledOfficeManagerTest {
         Thread.sleep(RESTART_WAIT_TIME);
         assertTrue(process.isRunning());
         assertTrue(connection.isConnected());
+        assertEquals(countPumperThreads(), 2);
 
         MockOfficeTask goodTask = new MockOfficeTask();
         officeManager.execute(goodTask);
@@ -98,10 +110,13 @@ public class PooledOfficeManagerTest {
         assertFalse(connection.isConnected());
         assertFalse(process.isRunning());
         assertEquals(process.getExitCode(0, 0), 0);
+        assertEquals(countPumperThreads(), 0);
     }
 
     public void restartAfterTaskTimeout() throws Exception {
         PooledOfficeManagerSettings configuration = new PooledOfficeManagerSettings(CONNECTION_MODE);
+        configuration.setRedirectStdout(System.out);
+        configuration.setRedirectStderr(System.err);
         configuration.setTaskExecutionTimeout(1500L);
         final PooledOfficeManager officeManager = new PooledOfficeManager(configuration);
         
@@ -110,9 +125,11 @@ public class PooledOfficeManagerTest {
         OfficeConnection connection = (OfficeConnection) ReflectionUtils.getPrivateField(managedOfficeProcess, "connection");
         assertNotNull(connection);
         
+        assertEquals(countPumperThreads(), 0);
         officeManager.start();
         assertTrue(process.isRunning());
         assertTrue(connection.isConnected());
+        assertEquals(countPumperThreads(), 2);
         
         MockOfficeTask longTask = new MockOfficeTask(2000);
         try {
@@ -125,6 +142,7 @@ public class PooledOfficeManagerTest {
         Thread.sleep(RESTART_WAIT_TIME);
         assertTrue(process.isRunning());
         assertTrue(connection.isConnected());
+        assertEquals(countPumperThreads(), 2);
 
         MockOfficeTask goodTask = new MockOfficeTask();
         officeManager.execute(goodTask);
@@ -134,10 +152,13 @@ public class PooledOfficeManagerTest {
         assertFalse(connection.isConnected());
         assertFalse(process.isRunning());
         assertEquals(process.getExitCode(0, 0), 0);
+        assertEquals(countPumperThreads(), 0);
     }
 
     public void restartWhenMaxTasksPerProcessReached() throws Exception {
         PooledOfficeManagerSettings configuration = new PooledOfficeManagerSettings(CONNECTION_MODE);
+        configuration.setRedirectStdout(System.out);
+        configuration.setRedirectStderr(System.err);
         configuration.setMaxTasksPerProcess(3);
         final PooledOfficeManager officeManager = new PooledOfficeManager(configuration);
         
@@ -146,9 +167,11 @@ public class PooledOfficeManagerTest {
         OfficeConnection connection = (OfficeConnection) ReflectionUtils.getPrivateField(managedOfficeProcess, "connection");
         assertNotNull(connection);
         
+        assertEquals(countPumperThreads(), 0);
         officeManager.start();
         assertTrue(process.isRunning());
         assertTrue(connection.isConnected());
+        assertEquals(countPumperThreads(), 2);
         
         for (int i = 0; i < 3; i++) {
             MockOfficeTask task = new MockOfficeTask();
@@ -168,6 +191,20 @@ public class PooledOfficeManagerTest {
         assertFalse(connection.isConnected());
         assertFalse(process.isRunning());
         assertEquals(process.getExitCode(0, 0), 0);
+        assertEquals(countPumperThreads(), 0);
     }
 
+    private static int countPumperThreads() {
+        return countThreads("Exec Stream Pumper");
+    }
+
+    private static int countThreads(String prefix) {
+        int count = 0;
+        for (Thread th : Thread.getAllStackTraces().keySet()) {
+            if (th.getName().startsWith(prefix)) {
+                count++;
+            }
+        }
+        return count;
+    }
 }

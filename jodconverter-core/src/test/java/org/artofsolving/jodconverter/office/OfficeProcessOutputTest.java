@@ -21,7 +21,7 @@ import java.nio.charset.Charset;
 
 import org.testng.annotations.Test;
 
-@Test(groups="functional")
+@Test
 public class OfficeProcessOutputTest {
 
     public void dontShowWarnings() throws IOException {
