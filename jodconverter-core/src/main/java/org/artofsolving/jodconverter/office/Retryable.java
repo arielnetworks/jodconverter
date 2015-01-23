@@ -26,29 +26,37 @@ abstract class Retryable {
 
     public void execute(long delay, long interval, long timeout) throws RetryTimeoutException, Exception {
         long start = System.currentTimeMillis();
+        boolean interrupted = false;
         if (delay > 0L) {
-            sleep(delay);
+            interrupted |= sleep(delay);
         }
-        while (true) {
-            try {
-                attempt();
-                return;
-            } catch (TemporaryException temporaryException) {
-                if (System.currentTimeMillis() - start < timeout) {
-                    sleep(interval);
-                    // continue
-                } else {
-                    throw new RetryTimeoutException(temporaryException.getCause());
+        try {
+            while (true) {
+                try {
+                    attempt();
+                    return;
+                } catch (TemporaryException temporaryException) {
+                    if (System.currentTimeMillis() - start < timeout) {
+                        interrupted |= sleep(interval);
+                        // continue
+                    } else {
+                        throw new RetryTimeoutException(temporaryException.getCause());
+                    }
                 }
+            }
+        } finally {
+            if (interrupted) {
+                Thread.currentThread().interrupt();
             }
         }
     }
 
-    private void sleep(long millis) {
+    private boolean sleep(long millis) {
         try {
             Thread.sleep(millis);
-        } catch (InterruptedException interruptedException) {
-            // continue
+            return false;
+        } catch (InterruptedException e) {
+            return true;
         }
     }
 
