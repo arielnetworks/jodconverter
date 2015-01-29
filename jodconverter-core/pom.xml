@@ -25,7 +25,6 @@
   <scm>
     <url>git@github.com:arielnetworks/jodconverter.git</url>
     <connection>scm:git:git@github.com:arielnetworks/jodconverter.git</connection>
-    <tag>HEAD</tag>
   </scm>
   <inceptionYear>2003</inceptionYear>
   <developers>
