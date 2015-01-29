@@ -1,7 +1,7 @@
 JODConverter
 ============
 
-This is JODConverter 3.0 beta.
+This is **fork** of JODConverter for our purpose.
 
 JODConverter automates conversions between office document formats
 using LibreOffice or Apache OpenOffice. 

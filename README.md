@@ -1,6 +1,8 @@
 JODConverter
 ============
 
+This is **fork** of JODConverter for our purpose.
+
 JODConverter (for Java OpenDocument Converter) automates document conversions
 using LibreOffice or OpenOffice.org.
 

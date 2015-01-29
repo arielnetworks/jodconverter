@@ -2,7 +2,7 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
   <modelVersion>4.0.0</modelVersion>
 
-  <groupId>org.artofsolving.jodconverter</groupId>
+  <groupId>com.arielnetworks</groupId>
   <artifactId>jodconverter-core</artifactId>
   <version>3.0-beta-7-ariel-SNAPSHOT</version>
   <packaging>jar</packaging>
@@ -11,7 +11,7 @@
   <description>
     JODConverter converts office documents using OpenOffice.org
   </description>
-  <url>http://jodconverter.googlecode.com</url>
+  <url>https://github.com/arielnetworks/jodconverter</url>
   <licenses>
     <license>
       <name>GNU Lesser General Public License, Version 3 or later</name>
@@ -29,12 +29,16 @@
   <inceptionYear>2003</inceptionYear>
   <developers>
     <developer>
-      <id>mirko.nasato</id>
-      <name>Mirko Nasato</name>
-      <email>mirko@artofsolving.com</email>
+      <id>taiki.sugawara</id>
+      <name>Taiki Sugawara</name>
+      <email>sugawara_t@ariel-networks.com</email>
     </developer>
   </developers>
   <contributors>
+    <contributor>
+      <name>Mirko Nasato</name>
+      <email>mirko@artofsolving.com</email>
+    </contributor>
     <contributor>
       <name>Shervin Asgari</name>
       <email>shervin@asgari.no</email>
